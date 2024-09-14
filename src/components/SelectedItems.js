@@ -17,7 +17,7 @@ const SelectedItems = ({ selectedItems, toggleSelectItem }) => {
                 className="bg-neutral-800 px-3 py-2 rounded-lg shadow-lg w-fit flex items-center justify-between"
               >
                 {/* Song/Album Name */}
-                <div>
+                <div className="">
                   <p className="text-md truncate">{item.name}</p>
                   <p className="text-sm truncate">{item.artists?.[0]?.name}</p>
                 </div>

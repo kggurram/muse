@@ -5,9 +5,9 @@ import SelectedItems from "./components/SelectedItems";
 import ResultsGrid from "./components/ResultsGrid";
 import RecommendationsGrid from "./components/RecommendationsGrid";
 import RestartButton from "./components/RestartButton";
-// import ToggleButtons from "./components/Toggle";
 import { searchSpotify } from "./services/spotify";
 import Toggle from "./components/Toggle";
+import { CircularProgress } from "@mui/material";
 
 function App() {
   const [query, setQuery] = useState("");
@@ -17,6 +17,7 @@ function App() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [searchCompleted, setSearchCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -64,6 +65,7 @@ function App() {
 
   const getRecommendations = async () => {
     try {
+      setLoading(true);
       setRecommendations([]);
 
       const response = await axios.post("http://localhost:5000/recommend", {
@@ -74,8 +76,10 @@ function App() {
       setRecommendations(response.data || []);
       setSearchCompleted(true);
       setSelectedItems([]);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching recommendations:", error);
+      setLoading(false);
     }
   };
 
@@ -88,62 +92,56 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white font-roboto">
-      <div className="w-1/3 mx-auto">
-        <h1 className="text-7xl text-center font-lora pt-40">Muse</h1>
+    <div className="min-h-screen bg-neutral-950 text-white font-roboto sm:px-10 px-8">
+      <div className="w-full md:w-2/3 lg:w-1/2 mx-auto">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-center font-lora pt-16 sm:pt-24 lg:pt-32">
+          Muse.
+        </h1>
       </div>
 
-      <div className="p-4 w-1/3 mx-auto">
+      <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
         {!searchCompleted ? (
-          <div className="space-y-3 pt-20 ">
-            <div className="w-1/2 mx-auto space-y-4">
-              <div className="flow-root">
-                <div className="float-left">
-                  <Toggle
-                    searchType={searchType}
-                    setSearchType={setSearchType}
-                    setSelectedItems={setSelectedItems}
-                  />
-                </div>
+          <div className="space-y-3 pt-8 sm:pt-12 md:pt-16 lg:pt-20">
+            <div className="w-full md:w-3/4 lg:w-1/2 mx-auto space-y-4">
+              <div className="flex justify-between">
+                <Toggle
+                  searchType={searchType}
+                  setSearchType={setSearchType}
+                  setSelectedItems={setSelectedItems}
+                />
 
                 {selectedItems.length >= 10 && (
-                  <div className="text-center float-right">
-                    <button
-                      className="px-6 py-2 bg-orange-500 text-white rounded-lg text-sm"
-                      onClick={getRecommendations}
-                    >
-                      Generate
-                    </button>
-                  </div>
+                  <button
+                    className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm flex items-center justify-center"
+                    onClick={getRecommendations}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      "Generate"
+                    )}
+                  </button>
                 )}
               </div>
 
               <SearchBar query={query} setQuery={setQuery} />
             </div>
+
             <div className="py-4">
               <SelectedItems
                 selectedItems={selectedItems}
                 toggleSelectItem={toggleSelectItem}
               />
             </div>
-            <div className="pt-4">
+
+            <div className="pt-4 pb-20">
               <ResultsGrid
                 results={results}
                 toggleSelectItem={toggleSelectItem}
                 selectedItems={selectedItems}
               />
             </div>
-
-            {/* {selectedItems.length >= 10 && (
-              <div className="mt-8 text-center">
-                <button
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg"
-                  onClick={getRecommendations}
-                >
-                  Generate Recommendations
-                </button>
-              </div>
-            )} */}
           </div>
         ) : (
           <>
