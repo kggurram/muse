@@ -8,6 +8,7 @@ import RestartButton from "./components/RestartButton";
 import { searchSpotify } from "./services/spotify";
 import Toggle from "./components/Toggle";
 import { CircularProgress } from "@mui/material";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function App() {
   const [query, setQuery] = useState("");
@@ -96,6 +97,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white font-roboto sm:px-10 px-8">
+      <SpeedInsights />
       <div className="w-full md:w-2/3 lg:w-1/2 mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-center font-lora pt-16 sm:pt-24 lg:pt-32">
           Muse.
