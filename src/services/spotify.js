@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Fetch the Spotify token from your backend (or generate it directly if using client credentials flow)
 const fetchSpotifyToken = async () => {
-  const response = await axios.get("http://localhost:3001/token");
+  const response = await axios.get("https://muse-ba43.onrender.com/token");
   return response.data.access_token;
 };
 

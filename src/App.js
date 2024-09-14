@@ -68,10 +68,13 @@ function App() {
       setLoading(true);
       setRecommendations([]);
 
-      const response = await axios.post("http://localhost:5000/recommend", {
-        selected_items: selectedItems,
-        search_type: searchType,
-      });
+      const response = await axios.post(
+        "https://muse-ba43.onrender.com/recommend",
+        {
+          selected_items: selectedItems,
+          search_type: searchType,
+        }
+      );
 
       setRecommendations(response.data || []);
       setSearchCompleted(true);

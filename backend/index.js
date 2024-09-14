@@ -4,7 +4,7 @@ const axios = require("axios");
 const cors = require("cors"); // Import CORS
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001; // Use environment port or fallback to 3001
 
 // Enable CORS for all routes
 app.use(cors());
@@ -34,5 +34,5 @@ app.get("/token", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Backend server running on http://localhost:${port}`);
+  console.log(`Backend server running on port ${port}`);
 });
