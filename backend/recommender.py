@@ -9,7 +9,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-
 client_id = os.environ.get('ID')
 client_secret = os.environ.get('Secret')
 
@@ -25,28 +24,32 @@ def get_spotify_token():
         'client_id': client_id,
         'client_secret': client_secret,
     })
-
     auth_response_data = auth_response.json()
     if 'access_token' in auth_response_data:
         return auth_response_data['access_token']
     else:
         raise Exception("Failed to fetch Spotify access token")
 
-def fetch_similar_tracks_from_albums(token, seed_albums, total_tracks=150):
+# Fetch similar tracks based on albums, validate, and handle missing/empty seed tracks
+def fetch_similar_tracks_from_albums(token, seed_albums, total_tracks=100):
     recommendations_url = 'https://api.spotify.com/v1/recommendations'
     headers = {'Authorization': f'Bearer {token}'}
 
     seed_tracks = []
-    
-    # Extract up to 5 tracks from each selected album
+
+    # Extract more tracks from each selected album
     for album_id in seed_albums:
         album_tracks_url = f'https://api.spotify.com/v1/albums/{album_id}/tracks'
         album_tracks_response = requests.get(album_tracks_url, headers=headers)
         album_tracks_data = album_tracks_response.json()
 
         if 'items' in album_tracks_data:
+            # Extract all tracks instead of limiting to 5
             track_ids = [track['id'] for track in album_tracks_data['items']]
-            seed_tracks.extend(track_ids[:5])  # Use up to 5 tracks from each album
+            if track_ids:
+                seed_tracks.extend(track_ids)  # Use as many tracks as possible
+            else:
+                print(f"Album {album_id} has no tracks to use for recommendations.")
         else:
             print(f"Error: 'items' not found for album {album_id}")
 
@@ -54,37 +57,48 @@ def fetch_similar_tracks_from_albums(token, seed_albums, total_tracks=150):
         print("No valid tracks found to use as seeds for recommendations.")
         return []
 
-    # Fetch recommendations using the seed tracks
-    params = {
-        'seed_tracks': ','.join(seed_tracks[:5]),  # Use up to 5 seed tracks
-        'limit': total_tracks
-    }
+    # Paginate seed tracks into chunks of 5 and request for recommendations in batches
+    all_recommended_tracks = []
+    for i in range(0, len(seed_tracks), 5):
+        chunk = seed_tracks[i:i+5]  # Get a chunk of up to 5 seed tracks (Spotify's limit)
+        params = {
+            'seed_tracks': ','.join(chunk),  # Use the chunk of seed tracks
+            'limit': 100,  # Set the limit to maximum of 100
+        }
+        
+        response = requests.get(recommendations_url, headers=headers, params=params)
+        data = response.json()
 
-    response = requests.get(recommendations_url, headers=headers, params=params)
-    data = response.json()
+        if 'tracks' in data:
+            all_recommended_tracks.extend(data['tracks'])  # Add the recommended tracks to the list
+        else:
+            # Log the error response from Spotify to understand why it failed
+            print(f"Error fetching recommendations: {data}")
 
-    if 'tracks' in data:
-        return data['tracks']  # Return the recommended tracks
-    else:
-        # Log the error response from Spotify to understand why it failed
-        print(f"Error fetching recommendations: {data}")
-        return []
+        # Stop if we have collected enough tracks
+        if len(all_recommended_tracks) >= total_tracks:
+            break
 
-def fetch_similar_songs(token, seed_tracks, total_songs=150):
+    # Return the collected recommendations, truncated to the total_tracks limit
+    return all_recommended_tracks[:total_tracks]
+
+
+
+# Fetch similar songs (remains unchanged)
+def fetch_similar_songs(token, seed_tracks, total_songs=100):
     recommendations_url = 'https://api.spotify.com/v1/recommendations'
     headers = {'Authorization': f'Bearer {token}'}
 
     all_songs = []
     for i in range(0, len(seed_tracks), 5):
         seed_chunk = seed_tracks[i:i+5]
-        params = {'seed_tracks': ','.join(seed_chunk), 'limit': min(50, total_songs)}
+        params = {'seed_tracks': ','.join(seed_chunk), 'limit': total_songs}
         response = requests.get(recommendations_url, headers=headers, params=params)
         data = response.json()
 
         if 'tracks' in data:
             all_songs.extend(data['tracks'])
         else:
-            # Log the response data for debugging
             print(f"Error fetching tracks: {data}")
 
         if len(all_songs) >= total_songs:
@@ -99,14 +113,13 @@ def get_tracks_and_audio_features(item_ids, search_type, token):
     combined_data = []
 
     if search_type == "track":
-        # If we're working with tracks, fetch their audio features directly
+        # Fetch audio features for tracks
         tracks_response = requests.get(tracks_url, headers=headers, params={'ids': ','.join(item_ids)})
         tracks_data = tracks_response.json()
 
-        # Check for the 'tracks' key before proceeding
         if 'tracks' not in tracks_data:
             print(f"Error: 'tracks' key not found in response: {tracks_data}")
-            return combined_data  # Return an empty list to prevent KeyError
+            return combined_data  # Return empty list
 
         # Fetch audio features
         features_response = requests.get(features_url, headers=headers, params={'ids': ','.join(item_ids)})
@@ -121,17 +134,17 @@ def get_tracks_and_audio_features(item_ids, search_type, token):
                 })
 
     elif search_type == "album":
-        # For albums, fetch tracks for each album and their audio features
+        # Fetch tracks and audio features for albums
         for album_id in item_ids:
             album_tracks_url = f'https://api.spotify.com/v1/albums/{album_id}/tracks'
             album_tracks_response = requests.get(album_tracks_url, headers=headers)
             album_tracks_data = album_tracks_response.json()
 
             if 'items' not in album_tracks_data:
-                continue  # Skip this album if no tracks were found
+                print(f"Error: 'items' key not found for album {album_id}")
+                continue
 
             track_ids = [track['id'] for track in album_tracks_data['items']]
-
             if track_ids:
                 # Fetch audio features for the album's tracks
                 features_response = requests.get(features_url, headers=headers, params={'ids': ','.join(track_ids[:100])})
@@ -155,13 +168,13 @@ def extract_relevant_features(audio_features):
     scaler = StandardScaler()
     return scaler.fit_transform(feature_matrix)
 
-def train_knn_model(audio_features):
+def train_knn_model(audio_features, neighbors=15):
     global knn_model, knn_features
     knn_features = extract_relevant_features(audio_features)
     if len(knn_features) == 0:
         raise ValueError("No valid audio features to train the model")
 
-    n_neighbors = min(10, len(knn_features))
+    n_neighbors = min(neighbors, len(knn_features))
     knn_model = NearestNeighbors(n_neighbors=n_neighbors)
     knn_model.fit(knn_features)
 
@@ -182,11 +195,11 @@ def recommend_tracks(selected_audio_features, full_audio_features, selected_ids)
     return recommendations
 
 def recommend_albums_from_tracks(recommended_tracks, selected_album_ids):
-    # Extract the album IDs from the recommended tracks and use that as album recommendations
     recommended_albums = []
     for track in recommended_tracks:
-        album = track['track']['album']
-        if album['id'] not in selected_album_ids:
+        # Safely access album field to avoid KeyError
+        album = track.get('track', {}).get('album')
+        if album and album['id'] not in selected_album_ids:
             recommended_albums.append(album)
 
     return recommended_albums
@@ -203,27 +216,31 @@ def recommend():
     token = get_spotify_token()
     item_ids = [item['id'] for item in selected_items]
 
-    # Fetch audio features and tracks based on selected search type
+    # Fetch tracks and audio features based on the selected search type
     combined_data.extend(get_tracks_and_audio_features(item_ids, search_type, token))
 
     if search_type == 'track':
         # Fetch similar songs for track-based search
-        similar_songs = fetch_similar_songs(token, seed_tracks=item_ids, total_songs=150)
+        similar_songs = fetch_similar_songs(token, seed_tracks=item_ids, total_songs=100)
         combined_data.extend(get_tracks_and_audio_features([song['id'] for song in similar_songs], 'track', token))
-        train_knn_model([item['audio_features'] for item in combined_data])
+        train_knn_model([item['audio_features'] for item in combined_data], 15)
         recommendations = recommend_tracks([item['audio_features'] for item in combined_data], combined_data, selected_ids=item_ids)
 
     elif search_type == 'album':
-        # Fetch tracks from the selected albums, fetch similar tracks, and train the model
-        similar_tracks = fetch_similar_tracks_from_albums(token, seed_albums=item_ids, total_tracks=150)
+        # Fetch similar tracks based on album selection, validate and fetch
+        similar_tracks = fetch_similar_tracks_from_albums(token, seed_albums=item_ids, total_tracks=100)
+        
+        if not similar_tracks:
+            print("No similar tracks found for the selected albums.")
+            return jsonify([])  # No recommendations, return empty response
+        
         combined_data.extend(get_tracks_and_audio_features([track['id'] for track in similar_tracks], 'track', token))
-        train_knn_model([item['audio_features'] for item in combined_data])
+        train_knn_model([item['audio_features'] for item in combined_data], 30)
 
-        # Get recommendations from the KNN model
+        # Get track recommendations and convert to albums
         recommended_tracks = recommend_tracks([item['audio_features'] for item in combined_data], combined_data, selected_ids=item_ids)
-
-        # Convert recommended tracks to albums
         recommendations = recommend_albums_from_tracks(recommended_tracks, selected_album_ids=item_ids)
+        # print(recommendations)
 
     return jsonify(recommendations)
 
