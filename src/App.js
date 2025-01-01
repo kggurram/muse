@@ -97,14 +97,31 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white font-roboto sm:px-10 px-8">
-      <SpeedInsights />
+      {/* <SpeedInsights /> */}
       <div className="w-full md:w-2/3 lg:w-1/2 mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-center font-lora pt-16 sm:pt-24 lg:pt-32">
           Muse.
         </h1>
       </div>
 
-      <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
+      <div className="mt-40 2xl:w-1/4 xl:w-1/3 lg:w-2/5 md:w-3/5 sm:w-1/2 w-3/5 mx-auto text-xl text-gray-500">
+        Sorry... core functionality has been{" "}
+        <span className="text-yellow-700">deprecated</span> in Spotify's API;
+        this site is <span className="text-red-800">no longer operational</span>
+        .
+        <div className="mt-16">
+          Feel free to check out the repo:{" "}
+          <a
+            className="text-blue-500"
+            target="_blank"
+            href="https://github.com/kggurram/muse"
+          >
+            GitHub
+          </a>
+        </div>
+      </div>
+
+      {/* <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
         {!searchCompleted ? (
           <div className="space-y-3 pt-8 sm:pt-12 md:pt-16 lg:pt-20">
             <div className="w-full md:w-3/4 lg:w-1/2 mx-auto space-y-4">
@@ -157,7 +174,7 @@ function App() {
             />
           </>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
