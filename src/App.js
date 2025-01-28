@@ -9,6 +9,9 @@ import { searchSpotify } from "./services/spotify";
 import Toggle from "./components/Toggle";
 import { CircularProgress } from "@mui/material";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
+// import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
   const [query, setQuery] = useState("");
@@ -19,6 +22,10 @@ function App() {
   const [recommendations, setRecommendations] = useState([]);
   const [searchCompleted, setSearchCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -104,7 +111,7 @@ function App() {
         </h1>
       </div>
 
-      <div className="mt-40 2xl:w-1/4 xl:w-1/3 lg:w-2/5 md:w-3/5 sm:w-1/2 w-3/5 mx-auto text-xl text-gray-500">
+      {/* <div className="mt-40 2xl:w-1/4 xl:w-1/3 lg:w-2/5 md:w-3/5 sm:w-1/2 w-3/5 mx-auto text-xl text-gray-500">
         Sorry... core functionality has been{" "}
         <span className="text-yellow-700">deprecated</span> in Spotify's API;
         this site is <span className="text-red-800">no longer operational</span>
@@ -119,9 +126,9 @@ function App() {
             GitHub
           </a>
         </div>
-      </div>
+      </div> */}
 
-      {/* <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
+      <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
         {!searchCompleted ? (
           <div className="space-y-3 pt-8 sm:pt-12 md:pt-16 lg:pt-20">
             <div className="w-full md:w-3/4 lg:w-1/2 mx-auto space-y-4">
@@ -135,7 +142,8 @@ function App() {
                 {selectedItems.length >= 10 && (
                   <button
                     className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm flex items-center justify-center"
-                    onClick={getRecommendations}
+                    // onClick={getRecommendations}
+                    onClick={handleShow}
                     disabled={loading}
                   >
                     {loading ? (
@@ -145,6 +153,36 @@ function App() {
                     )}
                   </button>
                 )}
+                <Modal
+                  show={show}
+                  onHide={handleClose}
+                  backdrop="static"
+                  keyboard={true}
+                  centered
+                  className=""
+                >
+                  <Modal.Header
+                    closeButton
+                    className="text-white border-1 bg-neutral-700 border-0 border-slate-800 px-8 pt-4"
+                  >
+                    <Modal.Title>Sorry...</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body className="text-white text-lg border-1 border-0 border-slate-800 bg-neutral-700 px-8">
+                    Core functionality has been{" "}
+                    <span className="text-yellow-600">deprecated</span> in
+                    Spotify's API; this site is{" "}
+                    <span className="text-red-600">no longer operational</span>
+                  </Modal.Body>
+                  <Modal.Footer className="text-white border-1 border-0 border-slate-800 bg-neutral-700 px-8 pb-4">
+                    <Button
+                      href="https://github.com/kggurram/muse"
+                      target="_blank"
+                      variant="primary"
+                    >
+                      GitHub
+                    </Button>
+                  </Modal.Footer>
+                </Modal>
               </div>
 
               <SearchBar query={query} setQuery={setQuery} />
@@ -174,7 +212,7 @@ function App() {
             />
           </>
         )}
-      </div> */}
+      </div>
     </div>
   );
 }
