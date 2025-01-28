@@ -111,7 +111,7 @@ function App() {
         </h1>
       </div>
 
-      {/* <div className="mt-40 2xl:w-1/4 xl:w-1/3 lg:w-2/5 md:w-3/5 sm:w-1/2 w-3/5 mx-auto text-xl text-gray-500">
+      <div className="mt-40 2xl:w-1/4 xl:w-1/3 lg:w-2/5 md:w-3/5 sm:w-1/2 w-3/5 mx-auto text-xl text-gray-500">
         Sorry... core functionality has been{" "}
         <span className="text-yellow-700">deprecated</span> in Spotify's API;
         this site is <span className="text-red-800">no longer operational</span>
@@ -126,9 +126,9 @@ function App() {
             GitHub
           </a>
         </div>
-      </div> */}
+      </div>
 
-      <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
+      {/* <div className="p-4 w-full md:w-2/3 lg:w-1/2 mx-auto">
         {!searchCompleted ? (
           <div className="space-y-3 pt-8 sm:pt-12 md:pt-16 lg:pt-20">
             <div className="w-full md:w-3/4 lg:w-1/2 mx-auto space-y-4">
@@ -212,7 +212,7 @@ function App() {
             />
           </>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
