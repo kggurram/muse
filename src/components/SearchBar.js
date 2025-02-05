@@ -5,7 +5,7 @@ const SearchBar = ({ query, setQuery }) => {
   return (
     <div className="relative flex items-center w-full">
       {/* Search Icon */}
-      <AiOutlineSearch className="absolute left-3 text-gray-400" />
+      <AiOutlineSearch className="absolute right-3 text-gray-400" />
 
       {/* Input Field */}
       <input

@@ -2,6 +2,10 @@
 
 # **_NO LONGER OPERATIONAL_** - Core functionality removed from Spotify API
 
+<p align="center">
+  <img src="https://github.com/kggurram/muse/blob/main/public/pictures/muse.PNG" />
+</p>
+
 **Muse** is a sleek, modern web app designed to provide personalized music recommendations. Powered by the **Spotify API**, Muse leverages both track and album data to generate insightful suggestions for the user. Built using **React**, **TailwindCSS**, and a backend powered by **Express.js**, Muse showcases a seamless integration of user experience, music discovery, and data processing.
 
 ---
